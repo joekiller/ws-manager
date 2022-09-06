@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "sourceMap": true
+  },
+  "extends": "./tsconfig.json",
+  "exclude": ["node_modules"]
+}

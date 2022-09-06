@@ -1,0 +1,7 @@
+/src
+/.idea
+tsconfig.*
+jest.config.ts
+.prettierrc
+.eslintrc.cjs
+*tgz
