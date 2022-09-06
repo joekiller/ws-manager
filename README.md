@@ -53,7 +53,7 @@ function run() {
       webSocketManager.shutdown();
     }
   });
-  // connect after setting up to recieve messages
+  // connect after setting up to receive messages
   webSocketManager.connect();
 }
 run();
