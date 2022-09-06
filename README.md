@@ -65,11 +65,11 @@ run();
 keeps failing to connect.
 2. The manager utilizes the WebSocket standard of Pings to detect if the line
 has gone silent without a disconnect.
-3. The manager allows minimal polling to need to take place as the consumer is
-always notified as soon as a message has appeared.
-4. The manage caches all pending messages in memory for eventual consumption.
+3. The manager allows minimal to zero polling as the consumer is always
+notified as soon as more messages have arrived.
+4. The manager caches all pending messages in memory for eventual consumption.
 With a fast enough processor, memory consumption is not a problem. However, be
-aware that this mechanism could cause heavy memory consumption of the consumer
+aware that this mechanism could cause heavy memory consumption if the consumer
 cannot keep up with the stream.
 5. I have run this engine with some other projects consuming over 66 million
 messages in a row with no memory leaks or issues. It seems pretty solid.
