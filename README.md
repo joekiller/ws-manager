@@ -31,7 +31,7 @@ The following events are emitted from the manager.
 type ManagerEvents = {
   messages: () => void;
   close: (code: number, reason: Buffer) => void;
-  error: (err: Error) => void;
+  error: (err: Error) => void;  // just log this or errors will trip you up
   opened: () => void;
 };
 ```
@@ -44,6 +44,7 @@ const webSocketManager = new WSManager<unknown>('wss://ws.backpack.tf/events');
 
 function run() {
   let running = true
+  webSocketManager.on('error', (err: ErrorEvent) => console.log(err.error, err.message, err.type));
   webSocketManager.on('messages', () => {
     const messages = webSocketManager.getMessages();
     if(messages.length > 0 && running) {

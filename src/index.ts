@@ -1,11 +1,11 @@
-import { WebSocket, RawData } from 'ws';
+import { WebSocket, RawData, ErrorEvent } from 'ws';
 import EventEmitter from 'events';
 import TypedEmitter from 'typed-emitter';
 
 type ManagerEvents = {
   messages: () => void;
   close: (code: number, reason: Buffer) => void;
-  error: (err: Error) => void;
+  error: (err: ErrorEvent) => void;
   opened: () => void;
 };
 
@@ -87,7 +87,7 @@ export default class WSManager<T> extends (EventEmitter as new () => TypedEmitte
     }
   }
 
-  private onError(err: Error) {
+  private onError(err: ErrorEvent) {
     this.clearTimeout();
     this.emit('error', err);
     this.reconnect();
@@ -117,7 +117,7 @@ export default class WSManager<T> extends (EventEmitter as new () => TypedEmitte
     this.webSocket?.terminate();
     this.webSocket = new WebSocket(this.address);
     this.webSocket.on('open', () => this.onOpened());
-    this.webSocket.on('error', (e) => this.onError(e));
+    this.webSocket.on('error', (e: ErrorEvent) => this.onError(e));
     this.webSocket.on('close', (code, reason) => this.onClose(code, reason));
     this.webSocket.on('ping', () => this.onPing());
     this.webSocket.on('message', (data, isBinary) => this.onMessage(data, isBinary));
