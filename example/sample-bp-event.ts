@@ -1,4 +1,5 @@
 import WSManager from '../src/index';
+import * as fsp from 'fs/promises';
 
 /**
  * Fired whenever a listing is created or updated. The exception to this is whenever listings are bumped, or when currency values are updated from a price suggestion (this causes all listings to have their value recalculated).
@@ -40,9 +41,10 @@ manager.on('error', (err) => {
 
 const run = async () => {
   manager.connect();
-  while (manager.length == 0) {
+  while (manager.length < 10) {
     await new Promise((resolve) => setTimeout(() => resolve(undefined), 100));
   }
+  manager.shutdown();
   const events = manager.getMessages()[0];
   const event = events[0];
   console.log('Sample Event:');
@@ -55,7 +57,11 @@ const run = async () => {
       } date: ${parsed.timeDate.toString()}`,
     );
   }
-  manager.shutdown();
+  const file = await fsp.open('events.jsonl', 'w');
+  for (const e of events) {
+    await file.appendFile(JSON.stringify(e), { encoding: 'utf8' });
+  }
+  await file.close();
 };
 
 run().catch((e) => console.error(e));
