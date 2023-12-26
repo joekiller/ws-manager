@@ -4,7 +4,6 @@ export default {
   testMatch: ['**/*.test.ts'],
   testPathIgnorePatterns: ['/node_modules/'],
   reporters: ['default', 'jest-junit'],
-  globals: { 'ts-jest': { diagnostics: false } },
   transform: {
     '^.+\\.tsx?$': 'ts-jest'
   }
