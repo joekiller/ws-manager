@@ -45,11 +45,11 @@ const run = async () => {
     await new Promise((resolve) => setTimeout(() => resolve(undefined), 100));
   }
   manager.shutdown();
-  const events = manager.getMessages()[0];
-  const event = events[0];
+  const events = manager.getMessages();
+  const eventBatch = events[0];
   console.log('Sample Event:');
-  console.log(JSON.stringify(event, undefined, 2));
-  for (const e of events) {
+  console.log(JSON.stringify(eventBatch, undefined, 2));
+  for (const e of eventBatch) {
     const parsed = parseEventId(e.id);
     console.log(
       `session: ${parsed.session} inc: ${parsed.increment} time: ${
