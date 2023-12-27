@@ -1,5 +1,6 @@
 import WSManager from '../src/index';
 import * as fsp from 'fs/promises';
+import * as os from 'os';
 
 /**
  * Fired whenever a listing is created or updated. The exception to this is whenever listings are bumped, or when currency values are updated from a price suggestion (this causes all listings to have their value recalculated).
@@ -59,7 +60,7 @@ const run = async () => {
   }
   const file = await fsp.open('events.jsonl', 'w');
   for (const e of events) {
-    await file.appendFile(JSON.stringify(e), { encoding: 'utf8' });
+    await file.appendFile(JSON.stringify(e) + os.EOL, { encoding: 'utf8' });
   }
   await file.close();
 };
