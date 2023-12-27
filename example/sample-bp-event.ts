@@ -22,11 +22,19 @@ interface BPEvent {
   payload: unknown;
 }
 
-const parseEventId = (eventId: string): { timestamp: number; timeDate: Date; session: number; increment: number } => {
+export const parseEventId = (
+  eventId: string,
+): { timestamp: number; timeDate: Date; session: number; increment: number } => {
   const rawEventId = Buffer.from(eventId, 'hex');
-  const timestamp = rawEventId.readIntBE(0, 4);
-  const session = rawEventId.readIntLE(4, 5);
-  const increment = rawEventId.readIntBE(9, 3);
+  const timestamp = rawEventId.readUInt32BE(0);
+  let session = 0;
+  for (let i = 0; i < 5; i++) {
+    session += rawEventId[8 - i] * Math.pow(256, i);
+  }
+  let increment = 0;
+  for (let i = 0; i < 3; i++) {
+    increment = (increment << 8) | rawEventId[9 + i];
+  }
   return {
     timestamp,
     timeDate: new Date(timestamp * 1000),
