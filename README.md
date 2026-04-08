@@ -33,7 +33,40 @@ type ManagerEvents = {
   close: (code: number, reason: Buffer) => void;
   error: (err: Error) => void;  // just log this or errors will trip you up
   opened: () => void;
+  stale: () => void;  // no messages received within staleTimeout
 };
+```
+
+### Constructor
+```typescript
+import WSManager, { WSManagerOptions } from '@joekiller/ws-manager';
+
+const manager = new WSManager<T>(
+  address: string,             // WebSocket URL
+  maxRetryTime?: number,       // Max backoff delay in ms (default: 10000)
+  pingTimeOut?: number,        // Ping/pong timeout in ms (default: 60000)
+  options?: WSManagerOptions,  // Additional options (see below)
+);
+```
+
+### WSManagerOptions
+```typescript
+interface WSManagerOptions {
+  /** Options passed directly to the WebSocket constructor (headers, perMessageDeflate, etc.) */
+  wsOptions?: ws.ClientOptions | ClientRequestArgs;
+  /**
+   * Interval in ms to check that the WebSocket connection is still in OPEN state.
+   * Triggers automatic reconnection if the connection is found to be unhealthy.
+   * Default: 0 (disabled). Recommended: 5000 for production use.
+   */
+  healthCheckInterval?: number;
+  /**
+   * Timeout in ms after the last received message before emitting a 'stale' event.
+   * Useful for detecting zombie connections where pings work but data has stopped.
+   * Default: 0 (disabled).
+   */
+  staleTimeout?: number;
+}
 ```
 
 ### Example
@@ -61,6 +94,58 @@ run();
 
 ```
 
+### Production Example (backpack.tf)
+
+This example shows production-hardened settings learned from running the
+backpack.tf listing feed at scale:
+
+```typescript
+import WSManager from '@joekiller/ws-manager';
+
+interface BPEvent {
+  id: string;
+  event: 'listing-update' | 'listing-delete';
+  payload: unknown;
+}
+
+const manager = new WSManager<BPEvent[]>('wss://ws.backpack.tf/events', undefined, undefined, {
+  wsOptions: {
+    // Disable compression - prevents CPU sawtooth patterns under sustained load
+    perMessageDeflate: false,
+    headers: {
+      'batch-test': 'true',
+    },
+  },
+  // Check connection health every 5 seconds
+  healthCheckInterval: 5000,
+  // Detect stale connections after 30 seconds without messages
+  staleTimeout: 30000,
+});
+
+manager.on('error', (err) => console.error('ws error:', err.message));
+manager.on('stale', () => console.warn('Connection may be stale - no messages received'));
+manager.on('opened', () => console.log('Connected'));
+manager.on('close', (code, reason) => console.log(`Disconnected: ${code} ${reason}`));
+
+manager.on('messages', () => {
+  const batches = manager.getMessages();
+  for (const events of batches) {
+    for (const event of events) {
+      // process each listing event
+      console.log(`${event.event}: ${event.id}`);
+    }
+  }
+});
+
+manager.connect();
+
+// Graceful shutdown - returns a Promise
+process.on('SIGINT', async () => {
+  await manager.shutdown();
+  process.exit(0);
+});
+```
+
 ## Notes and Features
 1. The manager will automatically reconnect to websockets with some backoff if it
 keeps failing to connect.
@@ -74,6 +159,14 @@ aware that this mechanism could cause heavy memory consumption if the consumer
 cannot keep up with the stream.
 5. I have run this engine with some other projects consuming over 66 million
 messages in a row with no memory leaks or issues. It seems pretty solid.
+6. WebSocket constructor options (headers, compression, etc.) can be passed
+through via `wsOptions` for full control over the underlying connection.
+7. Optional health checks detect connections stuck in non-OPEN states and
+trigger automatic reconnection.
+8. Optional stale connection detection emits a `'stale'` event when no messages
+arrive within a configurable timeout - useful for catching zombie connections.
+9. `shutdown()` returns a Promise that resolves when the connection is fully
+closed, enabling clean graceful shutdown sequences.
 
 ## About Me
 I made this in my spare time and I hope you find it useful. Look me up on
