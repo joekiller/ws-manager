@@ -3,7 +3,7 @@ export default {
   testEnvironment: 'node',
   testMatch: ['**/*.test.ts'],
   testPathIgnorePatterns: ['/node_modules/'],
-  reporters: ['default', 'jest-junit'],
+
   transform: {
     '^.+\\.tsx?$': 'ts-jest'
   }
