@@ -116,7 +116,7 @@ export default class WSManager<T> extends (EventEmitter as new () => TypedEmitte
 
   private onTimeOut(): void {
     this.pingTimeout = undefined;
-    const emptyTooLong = this.idleTime ? this.idleTime - Date.now() > this.pingTimeOut : false;
+    const emptyTooLong = this.idleTime ? Date.now() - this.idleTime >= this.pingTimeOut : false;
     if (emptyTooLong) {
       this.webSocket?.terminate();
       this.webSocket = undefined;
