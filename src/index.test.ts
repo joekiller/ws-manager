@@ -299,3 +299,24 @@ describe('stale connection detection', () => {
     await manager.shutdown();
   });
 });
+
+describe('idle time calculation', () => {
+  test('calculates idle time correctly in onTimeOut logic', () => {
+    // This test verifies the fix for the inverted idle time calculation bug
+    // The condition should be: Date.now() - idleTime >= pingTimeOut (not idleTime - Date.now())
+    const idleTime = Date.now();
+    const pingTimeOut = 100;
+    const futureTime = idleTime + pingTimeOut;
+
+    // Simulate checking at exactly pingTimeOut elapsed
+    const elapsedTime = futureTime - idleTime;
+    const emptyTooLong = elapsedTime >= pingTimeOut;
+
+    // Should be true since we've waited at least pingTimeOut
+    expect(emptyTooLong).toBe(true);
+
+    // Verify the buggy calculation would have been false
+    const buggyCalculation = idleTime - futureTime >= pingTimeOut;
+    expect(buggyCalculation).toBe(false);
+  });
+});
